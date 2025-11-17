@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CaddyProxyManager+</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Login Screen -->
+        <div id="login-screen" class="screen">
+            <div class="login-container">
+                <h1>🔐 CaddyProxyManager+</h1>
+                <p class="subtitle">Modern Proxy Management with Enterprise Security</p>
+                <form id="login-form">
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" name="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Login</button>
+                    <div id="login-error" class="error-message" style="display: none;"></div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Main Dashboard -->
+        <div id="dashboard-screen" class="screen" style="display: none;">
+            <header>
+                <h1>CaddyProxyManager+</h1>
+                <nav>
+                    <button class="nav-btn active" data-view="proxy-hosts">🌐 Proxy Hosts</button>
+                    <button class="nav-btn" data-view="security">🛡️ Security</button>
+                    <button class="nav-btn" data-view="monitoring">📊 Monitoring</button>
+                    <button class="nav-btn" data-view="settings">⚙️ Settings</button>
+                    <button class="nav-btn" id="logout-btn">🚪 Logout</button>
+                </nav>
+            </header>
+
+            <main>
+                <!-- Proxy Hosts View -->
+                <div id="proxy-hosts-view" class="view active">
+                    <div class="view-header">
+                        <h2>Proxy Hosts</h2>
+                        <button class="btn btn-primary" id="add-host-btn">➕ Add Proxy Host</button>
+                    </div>
+                    <div id="hosts-list" class="hosts-list">
+                        <!-- Dynamic content -->
+                    </div>
+                </div>
+
+                <!-- Security View -->
+                <div id="security-view" class="view">
+                    <div class="view-header">
+                        <h2>Security Dashboard</h2>
+                    </div>
+                    <div class="security-cards">
+                        <div class="card">
+                            <h3>🔐 Authentication</h3>
+                            <p>Forward Auth, Basic Auth, OAuth/OIDC</p>
+                            <ul>
+                                <li>✓ Authelia Integration</li>
+                                <li>✓ Authentik Integration</li>
+                                <li>✓ Pomerium Integration</li>
+                                <li>✓ HTTP Basic Auth</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>🛡️ Web Application Firewall</h3>
+                            <p>Coraza WAF with OWASP Core Rule Set</p>
+                            <ul>
+                                <li>✓ SQL Injection Protection</li>
+                                <li>✓ XSS Protection</li>
+                                <li>✓ RCE Protection</li>
+                                <li>✓ Path Traversal Protection</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>🚦 Rate Limiting</h3>
+                            <p>Prevent brute-force and DoS attacks</p>
+                            <ul>
+                                <li>Login Pages: 5 req/min</li>
+                                <li>Standard API: 60 req/min</li>
+                                <li>Custom Configurations</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3>🌍 Access Control</h3>
+                            <p>IP-based and geo-blocking</p>
+                            <ul>
+                                <li>✓ IP Whitelist/Blacklist</li>
+                                <li>✓ Geo-blocking by Country</li>
+                                <li>✓ Local Network Only</li>
+                                <li>✓ mTLS Support</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Monitoring View -->
+                <div id="monitoring-view" class="view">
+                    <div class="view-header">
+                        <h2>Monitoring & Logs</h2>
+                    </div>
+                    <div class="monitoring-cards">
+                        <div class="card">
+                            <h3>🤖 CrowdSec Dashboard</h3>
+                            <p>View banned IPs and decisions</p>
+                            <div id="crowdsec-stats">
+                                <div class="stat">
+                                    <span class="stat-label">Active Bans:</span>
+                                    <span class="stat-value" id="crowdsec-bans">-</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <h3>📈 Access Logs</h3>
+                            <p>Real-time traffic monitoring</p>
+                            <div id="access-logs">
+                                <div class="log-viewer">
+                                    <pre id="log-content">Loading logs...</pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings View -->
+                <div id="settings-view" class="view">
+                    <div class="view-header">
+                        <h2>Settings</h2>
+                    </div>
+                    <div class="settings-form">
+                        <div class="card">
+                            <h3>General Settings</h3>
+                            <form id="settings-form">
+                                <div class="form-group">
+                                    <label>Caddy Admin URL</label>
+                                    <input type="text" name="caddy_admin_url" value="http://localhost:2019">
+                                </div>
+                                <div class="form-group">
+                                    <label>Default Email (Let's Encrypt)</label>
+                                    <input type="email" name="default_email" placeholder="admin@example.com">
+                                </div>
+                                <button type="submit" class="btn btn-primary">Save Settings</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- Add/Edit Host Modal -->
+        <div id="host-modal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="modal-title">Add Proxy Host</h2>
+                    <button class="close-btn" id="close-modal">&times;</button>
+                </div>
+                <form id="host-form">
+                    <div class="tabs">
+                        <button type="button" class="tab-btn active" data-tab="basic">Basic</button>
+                        <button type="button" class="tab-btn" data-tab="ssl">SSL/TLS</button>
+                        <button type="button" class="tab-btn" data-tab="auth">Authentication</button>
+                        <button type="button" class="tab-btn" data-tab="security">Security</button>
+                        <button type="button" class="tab-btn" data-tab="advanced">Advanced</button>
+                    </div>
+
+                    <!-- Basic Tab -->
+                    <div class="tab-content active" data-tab="basic">
+                        <div class="form-group">
+                            <label>Domain Names</label>
+                            <input type="text" name="domain_names" placeholder="example.com, www.example.com" required>
+                            <small>Comma-separated list of domains</small>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Scheme</label>
+                                <select name="scheme">
+                                    <option value="http">HTTP</option>
+                                    <option value="https">HTTPS</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Forward Host</label>
+                                <input type="text" name="forward_host" placeholder="localhost" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Forward Port</label>
+                                <input type="number" name="forward_port" placeholder="8080" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SSL/TLS Tab -->
+                    <div class="tab-content" data-tab="ssl">
+                        <div class="form-group">
+                            <label class="checkbox">
+                                <input type="checkbox" name="ssl_enabled">
+                                Enable SSL/TLS
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label class="checkbox">
+                                <input type="checkbox" name="ssl_forced">
+                                Force HTTPS Redirect
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label class="checkbox">
+                                <input type="checkbox" name="dns_challenge">
+                                Use DNS Challenge (for wildcard certificates)
+                            </label>
+                        </div>
+                        <div class="form-group dns-provider-group" style="display: none;">
+                            <label>DNS Provider</label>
+                            <select name="dns_provider">
+                                <option value="">Select Provider</option>
+                                <option value="cloudflare">Cloudflare</option>
+                                <option value="route53">AWS Route53</option>
+                                <option value="godaddy">GoDaddy</option>
+                                <option value="namecheap">Namecheap</option>
+                            </select>
+                        </div>
+                        <div class="form-group dns-provider-group" style="display: none;">
+                            <label>API Token/Credentials</label>
+                            <textarea name="dns_credentials" placeholder="API token or credentials (JSON)"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="checkbox">
+                                <input type="checkbox" name="hsts_enabled" checked>
+                                Enable HSTS
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label class="checkbox">
+                                <input type="checkbox" name="hsts_preload">
+                                Enable HSTS Preload
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Authentication Tab -->
+                    <div class="tab-content" data-tab="auth">
+                        <h3>Basic Authentication</h3>
+                        <div class="form-group">
+                            <label class="checkbox">
+                                <input type="checkbox" name="basic_auth_enabled">
+                                Enable Basic Authentication
+                            </label>
+                        </div>
+                        <div class="form-group basic-auth-group" style="display: none;">
+                            <label>Username</label>
+                            <input type="text" name="basic_auth_username">
+                        </div>
+                        <div class="form-group basic-auth-group" style="display: none;">
+                            <label>Password</label>
+                            <input type="password" name="basic_auth_password">
+                        </div>
+
+                        <hr>
+
+                        <h3>Forward Authentication (SSO)</h3>
+                        <div class="form-group">
+                            <label class="checkbox">
+                                <input type="checkbox" name="forward_auth_enabled">
+                                Enable Forward Authentication
+                            </label>
+                        </div>
+                        <div class="form-group forward-auth-group" style="display: none;">
+                            <label>Provider</label>
+                            <select name="forward_auth_type">
+                                <option value="authelia">Authelia</option>
+                                <option value="authentik">Authentik</option>
+                                <option value="pomerium">Pomerium</option>
+                                <option value="custom">Custom</option>
+                            </select>
+                        </div>
+                        <div class="form-group forward-auth-group" style="display: none;">
+                            <label>Forward Auth URL</label>
+                            <input type="text" name="forward_auth_url" placeholder="https://auth.example.com">
+                        </div>
+                    </div>
+
+                    <!-- Security Tab -->
+                    <div class="tab-content" data-tab="security">
+                        <h3>Web Application Firewall</h3>
+                        <div class="form-group">
+                            <label class="checkbox">
+                                <input type="checkbox" name="waf_enabled">
+                                Enable WAF (Coraza with OWASP CRS)
+                            </label>
+                        </div>
+
+                        <hr>
+
+                        <h3>Rate Limiting</h3>
+                        <div class="form-group">
+                            <label class="checkbox">
+                                <input type="checkbox" name="rate_limit_enabled">
+                                Enable Rate Limiting
+                            </label>
+                        </div>
+                        <div class="form-group rate-limit-group" style="display: none;">
+                            <label>Preset</label>
+                            <select name="rate_limit_preset">
+                                <option value="login">Login Page (5 req/min)</option>
+                                <option value="api">API (60 req/min)</option>
+                                <option value="standard">Standard (100 req/min)</option>
+                                <option value="custom">Custom</option>
+                            </select>
+                        </div>
+
+                        <hr>
+
+                        <h3>Access Control</h3>
+                        <div class="form-group">
+                            <label class="checkbox">
+                                <input type="checkbox" name="local_only_enabled">
+                                Local Network Only (RFC1918)
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label class="checkbox">
+                                <input type="checkbox" name="geo_block_enabled">
+                                Enable Geo-blocking
+                            </label>
+                        </div>
+                        <div class="form-group geo-block-group" style="display: none;">
+                            <label>Allowed Countries (ISO codes)</label>
+                            <input type="text" name="geo_allowed_countries" placeholder="US, CA, GB">
+                        </div>
+                        <div class="form-group">
+                            <label>IP Whitelist (CIDR)</label>
+                            <input type="text" name="ip_whitelist" placeholder="192.168.1.0/24, 10.0.0.0/8">
+                        </div>
+                        <div class="form-group">
+                            <label>IP Blacklist (CIDR)</label>
+                            <input type="text" name="ip_blacklist" placeholder="1.2.3.4/32">
+                        </div>
+
+                        <hr>
+
+                        <h3>CrowdSec</h3>
+                        <div class="form-group">
+                            <label class="checkbox">
+                                <input type="checkbox" name="crowdsec_enabled" checked>
+                                Enable CrowdSec Protection
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Advanced Tab -->
+                    <div class="tab-content" data-tab="advanced">
+                        <h3>mTLS (Client Certificates)</h3>
+                        <div class="form-group">
+                            <label class="checkbox">
+                                <input type="checkbox" name="mtls_enabled">
+                                Require Client Certificate
+                            </label>
+                        </div>
+                        <div class="form-group mtls-group" style="display: none;">
+                            <label>Client CA Certificate (PEM)</label>
+                            <textarea name="mtls_client_ca" placeholder="-----BEGIN CERTIFICATE-----"></textarea>
+                        </div>
+
+                        <hr>
+
+                        <h3>Custom Headers</h3>
+                        <div class="form-group">
+                            <label>Content Security Policy</label>
+                            <input type="text" name="csp_directive" placeholder="default-src 'self'">
+                        </div>
+                        <div class="form-group">
+                            <label>X-Frame-Options</label>
+                            <select name="x_frame_options">
+                                <option value="SAMEORIGIN">SAMEORIGIN</option>
+                                <option value="DENY">DENY</option>
+                                <option value="">Allow</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Referrer-Policy</label>
+                            <select name="referrer_policy">
+                                <option value="strict-origin-when-cross-origin">strict-origin-when-cross-origin</option>
+                                <option value="no-referrer">no-referrer</option>
+                                <option value="same-origin">same-origin</option>
+                            </select>
+                        </div>
+
+                        <hr>
+
+                        <h3>Custom Caddy Configuration</h3>
+                        <div class="form-group">
+                            <label>Custom Directives</label>
+                            <textarea name="custom_caddy_config" placeholder="Additional Caddy directives..."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" id="cancel-modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,47 @@
+# Binaries
+caddyproxymanager
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Log files
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Caddy data
+data/
+config/
+
+# Node modules (if we add a build step later)
+node_modules/
+
+# Environment files
+.env
+.env.local
+
+# Temporary files
+/tmp/
+temp/
