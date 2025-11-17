@@ -64,7 +64,5 @@ jobs:
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
-          fail_ci_if_error: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Optional: set CODECOV_TOKEN in repo secrets if needed for private repos
+          fail_ci_if_error: false
+        # Note: Add CODECOV_TOKEN to repo secrets if upload fails or for private repos
