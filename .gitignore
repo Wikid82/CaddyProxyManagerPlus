@@ -31,9 +31,9 @@ Thumbs.db
 *.swo
 *~
 
-# Caddy data
+# Caddy data and runtime config
 data/
-config/
+/config/
 
 # Node modules (if we add a build step later)
 node_modules/
