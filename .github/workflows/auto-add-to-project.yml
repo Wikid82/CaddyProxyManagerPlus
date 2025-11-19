@@ -18,7 +18,7 @@ jobs:
           fi
 
       - name: Add issue or PR to project
-        uses: actions/add-to-project@v0.5.0
+        uses: actions/add-to-project@1b844f0c5ac6446a402e0cb3693f9be5eca188c5 # v0.6.1
         with:
           project-url: ${{ secrets.PROJECT_URL }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
